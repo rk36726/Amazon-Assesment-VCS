@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amazon VCS Assessment Practice</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #13131a;
+    --surface2: #1c1c27;
+    --border: #2a2a3d;
+    --accent: #ff6b35;
+    --accent2: #ffd166;
+    --success: #06d6a0;
+    --error: #ef476f;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --amazon: #ff9900;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  /* HERO */
+  #hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 2rem;
+    position: relative;
+  }
+
+  .hero-glow {
+    position: absolute;
+    width: 600px; height: 600px;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(255,107,53,0.15) 0%, transparent 70%);
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    pointer-events: none;
+  }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    background: rgba(255,153,0,0.12);
+    border: 1px solid rgba(255,153,0,0.3);
+    color: var(--amazon);
+    padding: 0.4rem 1rem;
+    border-radius: 100px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 1.5rem;
+    animation: fadeDown 0.6s ease both;
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 8vw, 5rem);
+    font-weight: 800;
+    line-height: 1.05;
+    margin-bottom: 1rem;
+    animation: fadeDown 0.7s ease 0.1s both;
+  }
+
+  h1 span { color: var(--accent); }
+
+  .hero-sub {
+    font-size: 1.1rem;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+    margin-bottom: 2.5rem;
+    animation: fadeDown 0.7s ease 0.2s both;
+  }
+
+  .stat-row {
+    display: flex;
+    gap: 2rem;
+    margin-bottom: 2.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+    animation: fadeDown 0.7s ease 0.3s both;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+  }
+
+  .stat-label {
+    font-size: 0.78rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .rounds-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    max-width: 760px;
+    width: 100%;
+    animation: fadeDown 0.7s ease 0.4s both;
+  }
+
+  .round-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    text-align: left;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .round-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, rgba(255,107,53,0.05), transparent);
+    opacity: 0;
+    transition: opacity 0.25s;
+  }
+
+  .round-card:hover { border-color: var(--accent); transform: translateY(-3px); box-shadow: 0 12px 40px rgba(255,107,53,0.15); }
+  .round-card:hover::before { opacity: 1; }
+
+  .round-icon { font-size: 1.8rem; margin-bottom: 0.75rem; }
+  .round-title { font-family: 'Syne', sans-serif; font-weight: 700; font-size: 1rem; margin-bottom: 0.25rem; }
+  .round-desc { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+  .round-count { font-size: 0.75rem; color: var(--accent); margin-top: 0.5rem; font-weight: 500; }
+
+  /* QUIZ SCREEN */
+  #quiz-screen {
+    display: none;
+    min-height: 100vh;
+    padding: 2rem 1rem;
+    max-width: 780px;
+    margin: 0 auto;
+  }
+
+  .quiz-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 2rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .back-btn {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 0.4rem;
+  }
+  .back-btn:hover { border-color: var(--text); color: var(--text); }
+
+  .quiz-meta { text-align: right; }
+  .quiz-round-name { font-family: 'Syne', sans-serif; font-size: 0.9rem; color: var(--amazon); font-weight: 700; }
+  .quiz-progress-text { font-size: 0.8rem; color: var(--muted); }
+
+  .progress-bar-wrap {
+    background: var(--surface2);
+    border-radius: 100px;
+    height: 6px;
+    margin-bottom: 2rem;
+    overflow: hidden;
+  }
+
+  .progress-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    border-radius: 100px;
+    transition: width 0.4s ease;
+  }
+
+  .score-live {
+    display: flex;
+    gap: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.75rem 1.25rem;
+    margin-bottom: 2rem;
+    font-size: 0.85rem;
+  }
+
+  .score-live span { color: var(--muted); }
+  .score-live strong { color: var(--text); }
+  .score-live .correct { color: var(--success); }
+  .score-live .wrong { color: var(--error); }
+
+  .question-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 2rem;
+    margin-bottom: 1.5rem;
+    animation: slideIn 0.35s ease;
+  }
+
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .q-number {
+    font-size: 0.75rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 0.75rem;
+  }
+
+  .q-text {
+    font-size: 1rem;
+    line-height: 1.7;
+    margin-bottom: 1.5rem;
+    font-weight: 400;
+  }
+
+  .q-context {
+    background: var(--surface2);
+    border-left: 3px solid var(--amazon);
+    padding: 0.8rem 1rem;
+    border-radius: 0 8px 8px 0;
+    font-size: 0.82rem;
+    color: var(--muted);
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    white-space: pre-line;
+  }
+
+  .options-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .option-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    text-align: left;
+    transition: all 0.2s;
+    line-height: 1.5;
+  }
+
+  .option-btn:hover:not(:disabled) {
+    border-color: var(--accent);
+    background: rgba(255,107,53,0.07);
+  }
+
+  .option-btn.selected-correct {
+    border-color: var(--success);
+    background: rgba(6,214,160,0.1);
+    color: var(--success);
+  }
+
+  .option-btn.selected-wrong {
+    border-color: var(--error);
+    background: rgba(239,71,111,0.1);
+    color: var(--error);
+  }
+
+  .option-btn.reveal-correct {
+    border-color: var(--success);
+    background: rgba(6,214,160,0.07);
+    color: var(--success);
+  }
+
+  .option-btn:disabled { cursor: default; }
+
+  .feedback-box {
+    margin-top: 1.25rem;
+    padding: 1rem 1.25rem;
+    border-radius: 12px;
+    font-size: 0.88rem;
+    line-height: 1.6;
+    display: none;
+  }
+
+  .feedback-box.correct { background: rgba(6,214,160,0.1); border: 1px solid rgba(6,214,160,0.3); color: var(--success); }
+  .feedback-box.wrong { background: rgba(239,71,111,0.1); border: 1px solid rgba(239,71,111,0.3); color: #ff8fa3; }
+
+  .next-btn {
+    width: 100%;
+    background: linear-gradient(135deg, var(--accent), #ff8c55);
+    border: none;
+    color: white;
+    padding: 1rem;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    letter-spacing: 0.02em;
+    display: none;
+  }
+
+  .next-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,107,53,0.4); }
+
+  /* RESULTS SCREEN */
+  #results-screen {
+    display: none;
+    min-height: 100vh;
+    padding: 3rem 1rem;
+    max-width: 680px;
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  .result-trophy { font-size: 4rem; margin-bottom: 1rem; animation: bounce 0.6s ease; }
+
+  @keyframes bounce { 0%,100%{transform:scale(1)} 50%{transform:scale(1.2)} }
+
+  .result-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.5rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+  }
+
+  .result-subtitle { color: var(--muted); margin-bottom: 2.5rem; }
+
+  .score-circle-wrap { display: flex; justify-content: center; margin-bottom: 2.5rem; }
+
+  .score-circle {
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: conic-gradient(var(--accent) var(--pct, 0%), var(--surface2) 0%);
+    display: flex; align-items: center; justify-content: center;
+    position: relative;
+  }
+
+  .score-circle::before {
+    content: '';
+    position: absolute;
+    width: 130px; height: 130px;
+    background: var(--bg);
+    border-radius: 50%;
+  }
+
+  .score-circle-inner {
+    position: relative;
+    z-index: 1;
+    text-align: center;
+  }
+
+  .score-pct { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--text); }
+  .score-label-small { font-size: 0.75rem; color: var(--muted); }
+
+  .result-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+    margin-bottom: 2.5rem;
+  }
+
+  .result-stat {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+  }
+
+  .result-stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.8rem;
+    font-weight: 800;
+    margin-bottom: 0.25rem;
+  }
+
+  .result-stat-num.green { color: var(--success); }
+  .result-stat-num.red { color: var(--error); }
+  .result-stat-num.yellow { color: var(--accent2); }
+
+  .result-stat-label { font-size: 0.78rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; }
+
+  .grade-badge {
+    display: inline-block;
+    padding: 0.5rem 1.5rem;
+    border-radius: 100px;
+    font-family: 'Syne', sans-serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    margin-bottom: 2rem;
+  }
+
+  .result-actions { display: flex; gap: 1rem; flex-wrap: wrap; justify-content: center; }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--accent), #ff8c55);
+    border: none; color: white;
+    padding: 0.9rem 2rem;
+    border-radius: 12px;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.95rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(255,107,53,0.4); }
+
+  .btn-ghost {
+    background: none;
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.9rem 2rem;
+    border-radius: 12px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.95rem;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .btn-ghost:hover { border-color: var(--text); }
+
+  /* REVIEW SECTION */
+  .review-toggle {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 0.75rem 1.5rem;
+    border-radius: 10px;
+    font-family: 'DM Sans', sans-serif;
+    cursor: pointer;
+    margin-bottom: 1.5rem;
+    transition: all 0.2s;
+    font-size: 0.88rem;
+  }
+  .review-toggle:hover { border-color: var(--accent); color: var(--accent); }
+
+  .review-list { text-align: left; display: none; }
+  .review-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    margin-bottom: 0.75rem;
+  }
+  .review-item.correct { border-left: 3px solid var(--success); }
+  .review-item.wrong { border-left: 3px solid var(--error); }
+  .review-q { font-size: 0.88rem; margin-bottom: 0.5rem; line-height: 1.5; }
+  .review-answer { font-size: 0.82rem; }
+  .review-answer span { color: var(--success); font-weight: 500; }
+
+  @keyframes fadeDown {
+    from { opacity: 0; transform: translateY(-12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* PERSONALITY SECTION */
+  .personality-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  .pair-btn {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    color: var(--text);
+    padding: 1rem;
+    border-radius: 12px;
+    cursor: pointer;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    text-align: center;
+    transition: all 0.2s;
+    line-height: 1.5;
+  }
+  .pair-btn:hover:not(:disabled) { border-color: var(--accent); background: rgba(255,107,53,0.07); }
+  .pair-btn.selected-correct { border-color: var(--success); background: rgba(6,214,160,0.1); color: var(--success); }
+  .pair-btn.selected-wrong { border-color: var(--error); background: rgba(239,71,111,0.1); color: var(--error); }
+  .pair-btn.reveal-correct { border-color: var(--success); background: rgba(6,214,160,0.07); color: var(--success); }
+  .pair-btn:disabled { cursor: default; }
+
+  @media (max-width: 500px) {
+    .personality-pair { grid-template-columns: 1fr; }
+    .result-stats { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- HERO / HOME -->
+<div id="hero">
+  <div class="hero-glow"></div>
+  <div class="badge">🏆 Official Prep Guide</div>
+  <h1>Amazon VCS<br><span>Assessment</span> Prep</h1>
+  <p class="hero-sub">Practice all 3 rounds of the Virtual Customer Service assessment with instant scoring and detailed feedback.</p>
+
+  <div class="stat-row">
+    <div class="stat"><div class="stat-num">3</div><div class="stat-label">Rounds</div></div>
+    <div class="stat"><div class="stat-num">60+</div><div class="stat-label">Questions</div></div>
+    <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Attempts</div></div>
+  </div>
+
+  <div class="rounds-grid">
+    <div class="round-card" onclick="startRound(0)">
+      <div class="round-icon">🎧</div>
+      <div class="round-title">Round 1 – Customer Service</div>
+      <div class="round-desc">MCQ scenarios, return policies, troubleshooting steps and data entry.</div>
+      <div class="round-count">19 Questions</div>
+    </div>
+    <div class="round-card" onclick="startRound(1)">
+      <div class="round-icon">💬</div>
+      <div class="round-title">Round 2 – Conversations</div>
+      <div class="round-desc">Real customer conversations: Christina, Celeste, Alex, Mina, Francisco, Gary.</div>
+      <div class="round-count">24 Questions</div>
+    </div>
+    <div class="round-card" onclick="startRound(2)">
+      <div class="round-icon">🧠</div>
+      <div class="round-title">Round 3 – Personality</div>
+      <div class="round-desc">Work style pairs — choose which statement is most like the ideal candidate.</div>
+      <div class="round-count">48 Questions</div>
+    </div>
+    <div class="round-card" onclick="startRound(3)">
+      <div class="round-icon">🔥</div>
+      <div class="round-title">Full Practice Test</div>
+      <div class="round-desc">Simulate the complete assessment across all rounds in one sitting.</div>
+      <div class="round-count">All Questions</div>
+    </div>
+  </div>
+</div>
+
+<!-- QUIZ SCREEN -->
+<div id="quiz-screen">
+  <div class="quiz-header">
+    <button class="back-btn" onclick="goHome()">← Back</button>
+    <div class="quiz-meta">
+      <div class="quiz-round-name" id="round-name"></div>
+      <div class="quiz-progress-text" id="progress-text"></div>
+    </div>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-bar-fill" id="progress-bar"></div>
+  </div>
+
+  <div class="score-live">
+    <div><span>✅ Correct: </span><strong class="correct" id="live-correct">0</strong></div>
+    <div><span>❌ Wrong: </span><strong class="wrong" id="live-wrong">0</strong></div>
+    <div><span>📊 Score: </span><strong id="live-score">0%</strong></div>
+  </div>
+
+  <div id="question-container"></div>
+
+  <button class="next-btn" id="next-btn" onclick="nextQuestion()">Next Question →</button>
+</div>
+
+<!-- RESULTS SCREEN -->
+<div id="results-screen">
+  <div class="result-trophy" id="result-trophy">🏆</div>
+  <div class="result-title" id="result-title">Great Work!</div>
+  <div class="result-subtitle" id="result-subtitle">Here's how you did</div>
+
+  <div class="score-circle-wrap">
+    <div class="score-circle" id="score-circle">
+      <div class="score-circle-inner">
+        <div class="score-pct" id="score-pct">0%</div>
+        <div class="score-label-small">Score</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-stats">
+    <div class="result-stat">
+      <div class="result-stat-num green" id="rs-correct">0</div>
+      <div class="result-stat-label">Correct</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-num red" id="rs-wrong">0</div>
+      <div class="result-stat-label">Wrong</div>
+    </div>
+    <div class="result-stat">
+      <div class="result-stat-num yellow" id="rs-total">0</div>
+      <div class="result-stat-label">Total</div>
+    </div>
+  </div>
+
+  <div class="grade-badge" id="grade-badge">–</div>
+
+  <div class="result-actions">
+    <button class="btn-primary" onclick="retryRound()">🔄 Try Again</button>
+    <button class="btn-ghost" onclick="goHome()">🏠 Home</button>
+    <button class="review-toggle" onclick="toggleReview()">📋 Review Answers</button>
+  </div>
+
+  <div class="review-list" id="review-list"></div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// QUESTION DATA
+// ═══════════════════════════════════════════════════════
+
+const round1 = [
+  {
+    id: 'r1q1', type: 'mcq',
+    q: 'Customer: "My order of light bulbs arrived today, and half of them were broken. Should I return the broken ones and keep the others?"',
+    context: 'Policy: Open/Arrived Broken → Full refund available; broken items not returnable',
+    options: [
+      'Please use common sense — returning broken bulbs puts our employees at risk. I will issue you a refund.',
+      'I apologize for the inconvenience. I\'ll be happy to submit a full refund for you.',
+      'For your safety, you don\'t need to ship the broken bulbs back to us. I\'ll give you a full refund.',
+      'That\'s unfortunate, at least not all arrived broken. I\'ll issue you a refund.'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q2', type: 'mcq',
+    q: 'Customer: "I purchased one of your e-readers. It worked for several hours, but now it won\'t turn on. Even when I plug it into the charger, it does nothing."',
+    context: 'Troubleshooting Steps:\n1. Ensure internet connection\n2. Check "safe" mode\n3. Confirm battery is fully charged\n4. Reset to default settings',
+    options: [
+      'Step 1: Ensure the device is connected to the internet',
+      'Step 2: Make sure the device is not in "safe" mode',
+      'Step 3: Confirm the battery is fully charged',
+      'Step 4: Reset the device to the default settings'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q3', type: 'mcq',
+    q: 'Customer found a hole in their tent but the return request was denied because the package was opened. How do you respond?',
+    context: 'Return Policy: Items must be unopened | Returned within 30 days | In original packaging',
+    options: [
+      '"Yes, you are correct. Because you opened the tent, you can\'t return it."',
+      '"Our policy states that opened items are non-returnable. We appreciate your feedback."',
+      '"I apologize for the inconvenience. Our return policy does state that items must be unopened. I\'m happy to work with you on a solution."',
+      '"I apologize, but your tent isn\'t returnable. Would you consider ordering a replacement?"'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q4', type: 'mcq',
+    q: 'Your team got approval for a team picnic. The park needs reservable picnic shelters, a parking lot, and activity areas like a sports field. Which park would you recommend?',
+    context: 'Park A: Picnic tables; reservable volleyball courts | Multiple parking lots\nPark B: Shaded picnic tables; water activities | Small lot + street\nPark C: Reservable picnic shelters; sports fields | Multiple parking lots\nPark D: Reservable picnic tables; play fields + water | Street parking only',
+    options: ['Park A', 'Park B', 'Park C', 'Park D'],
+    answer: 2
+  },
+  {
+    id: 'r1q5', type: 'mcq',
+    q: 'Customer is following up on a return submitted a week ago – not seeing the credit in their account. Rank from BEST response:',
+    context: 'Order History: Backpack → Returned, Refund Processed',
+    options: [
+      '"Our records show your refund was processed. Have you checked your account recently? Sometimes it takes a bit to show up." (Best)',
+      '"I understand your frustration. Your refund was processed. Let me check how long it will take to show up." (Good)',
+      '"I can confirm your refund has been processed. Contact us again if it doesn\'t show up within the next couple of weeks." (Okay)',
+      '"I understand your concern, but you need to be more patient. You need to give it time to go through." (Worst)'
+    ],
+    answer: 0
+  },
+  {
+    id: 'r1q6', type: 'mcq',
+    q: 'Customer is annoyed – they ordered the wrong size shoes for their son\'s graduation tomorrow. What is the best empathetic response?',
+    options: [
+      '"Don\'t feel too bad about it, these things happen."',
+      '"Take it as a learning lesson. I\'m sure you\'ll now be more careful."',
+      '"I\'m sorry this happened to you."',
+      '"I completely understand. I would feel frustrated too."'
+    ],
+    answer: 3
+  },
+  {
+    id: 'r1q7', type: 'mcq',
+    q: 'Customer: "I just received my plate set. Three of the four glass plates are broken. The shipping box is damaged too. Can I return these for a refund?"',
+    context: 'Policy: Items broken during shipping that could jeopardize safety are not returnable. Broken nonreturnable items are eligible for free replacement OR refund upon request.',
+    options: [
+      '"I\'ll start a replacement order for you since not all your plates were damaged."',
+      '"I\'ll issue you a refund, which you could use to order new plates or something else."',
+      '"I can provide a refund or ship a replacement. What would you prefer?"',
+      '"Based on our policy, broken items are not returnable. I can help place a new order."'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q8', type: 'mcq',
+    q: 'Customer: "I want to stream videos on my tablet, but my Wi-Fi keeps disconnecting. I\'m close to the router and away from anything that could block the signal."',
+    context: 'Steps: 1-Confirm connection | 2-Turn off other devices | 3-Move closer to source | 4-Switch to 5 GHz | 5-Power-cycle everything | 6-Contact provider',
+    options: [
+      '"Try moving your tablet to a different location."',
+      '"If you have a dual-band router, try connecting to the 5 GHz channel."',
+      '"It would be helpful to know more. Is this happening to your other devices?"',
+      '"You should power-cycle your router, modem, and device to see if that resolves your streaming issues."'
+    ],
+    answer: 3
+  },
+  {
+    id: 'r1q9', type: 'mcq',
+    q: 'Customer: "I just placed an order for new shoes but got the wrong size. Is there a way to cancel my order?"',
+    context: 'Customer: Tiana Wilson | Order Status: Pending\nCancellation Policy: Pending = can be cancelled by customer OR associate',
+    options: [
+      '"Your order is in transit so I\'m afraid it cannot be cancelled."',
+      '"You are in luck, your order can be canceled. Either I can cancel, or you can do it yourself."',
+      '"Only I can cancel the order at this stage. Let me do that for you."',
+      '"The order has already been processed; please wait for it to arrive and return it."'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r1q10', type: 'mcq',
+    q: 'Co-worker asks: "Did you see the new training policy? We\'re required to complete two additional trainings every quarter. Also, the in-person training option seems new." What has actually CHANGED?',
+    context: 'Old: 4 required/year, 1 optional/year, 2 attempts each, No virtual option, Yes in-person\nNew: (same count but updated), 2 optional/year, 2 attempts (same), Virtual option added, Yes in-person',
+    options: [
+      'Number of attempts to pass required trainings',
+      'In-person option',
+      'Number of required trainings',
+      'Virtual option'
+    ],
+    answer: 3
+  },
+  {
+    id: 'r1q11', type: 'mcq',
+    q: 'Customer is visiting Arizona and looking for the return hub near postal code 68432. They want a phone number.',
+    context: 'Return Hub – Dyma: 74417 River Lane, Little Falls, AZ 68423 | Phone: 320-315-6598',
+    options: [
+      '"You should go to the return hub, Dyma."',
+      '"The address of the nearest return hub is 74417 River Lane."',
+      '"The phone number of the return hub is 320-315-6598."',
+      '"The postal code of the closest return hub is 68423."'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q12', type: 'mcq',
+    q: 'Customer calling to check on shipping address – someone took their mail, suspect fraud. They closed old account and opened new one. Why is the customer actually calling?',
+    options: [
+      'To open a new account',
+      'To report mail fraud',
+      'To check on the shipping address',
+      'To close an old account'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q13', type: 'mcq',
+    q: 'Customer purchased a Bluetooth speaker last week, decided it won\'t work for them. Wants to return and get a refund. What is the FIRST question you ask?',
+    context: 'Policy: Unopened → Full refund | Opened not used → Store credit | Open & used → Partial store credit | Used & broken → Not returnable',
+    options: [
+      '"What is the condition of the speaker?"',
+      '"Has the speaker been used?"',
+      '"Have you opened the box the speaker came in?"',
+      '"What do you not like about the speaker?"'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q14', type: 'mcq',
+    q: 'Customer is looking for a very specific teddy bear to give to a friend\'s 3-year-old. What is the best first response?',
+    options: [
+      '"I can help you find a teddy bear. When do you need it?"',
+      '"I recommend using the Top Toys section of our website."',
+      '"You\'re searching for a specific teddy bear to give as a gift? Can you describe what you\'re trying to find?"',
+      '"Can you tell me more about this teddy bear?"'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q15', type: 'mcq',
+    q: 'You\'ve been on the phone for 10 minutes troubleshooting a device issue but can\'t get enough information. Which action is MOST effective?',
+    options: [
+      'Ask another associate to join the call and attempt to troubleshoot together. (Best)',
+      'Continue working with the customer until the issue is resolved.',
+      'End the call and research the issue. Contact the customer when you have an answer.',
+      'Transfer the call to your manager so you can help other customers. (Worst)'
+    ],
+    answer: 0
+  },
+  {
+    id: 'r1q16', type: 'mcq',
+    q: 'While reviewing customer notes entered by another associate, you realize they may not have fully followed a policy. What do you do?',
+    options: [
+      'Continue working on your assigned tasks — the policy likely was followed.',
+      'Reach out to another associate to get input on the policy.',
+      'Ask your manager to review the notes with you.',
+      'Review the policy that may not have been followed.'
+    ],
+    answer: 2
+  },
+  {
+    id: 'r1q17', type: 'mcq',
+    q: 'You are on the phone with a customer who is complaining about a recent smart device purchase. What is the best response?',
+    options: [
+      'Listen to the feedback and thank the customer for calling.',
+      'Acknowledge the issues with the device and other complaints received.',
+      'Share the new device\'s benefits and suggest giving it another try.',
+      'Offer an alternative smart device model for the customer to consider.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r1q18', type: 'mcq',
+    q: 'Password Policy updated — associates must change password within 7 days. Which password complies?',
+    context: 'Requirements: Min 7 chars | At least 2 symbols (@, !, $, %, &) | Upper AND lower case letters | Combination of different numbers',
+    options: ['333PNW!', '701@AtS', '%!CAS21', '$JmS73!'],
+    answer: 3
+  },
+  {
+    id: 'r1q19', type: 'mcq',
+    q: 'While completing a required training, you notice it includes outdated policy information. What do you do?',
+    options: [
+      'Ask the other associates if they noticed an issue.',
+      'Nothing — the Training team is likely already aware.',
+      'Contact the Training team about what you found and the update needed.',
+      'Tell your manager the training includes outdated information.'
+    ],
+    answer: 2
+  }
+];
+
+const round1ex = [
+  {
+    id: 'r1e1', type: 'mcq',
+    q: 'Customer looking for a gift for their daughter. She only likes soft toys like her fish book. No electronics. Which would you recommend?',
+    options: ['Wooden Toy Truck', 'Sensory Toy', 'Kids Tablet', 'Plastic Shape Sorter'],
+    answer: 1
+  },
+  {
+    id: 'r1e2', type: 'mcq',
+    q: 'Customer wants to downgrade from Premium membership ($85/year). They rarely shop but enjoy Books available with Premium. Which membership?',
+    context: 'Content Plus: $25/yr – Unlimited movies, shows, books\nShip Saver: $50/yr – Free shipping\nBasic: $75/yr – Free shipping + unlimited streaming\nPremium: $85/yr – All above + automated monthly deliveries',
+    options: ['Content Plus – $25 – Unlimited movies, shows, and books', 'Ship Saver – $50 – Free shipping', 'Basic – $75 – Shipping + Streaming', 'Premium – $85 – All benefits'],
+    answer: 0
+  },
+  {
+    id: 'r1e3', type: 'mcq',
+    q: 'Customer wants a new laptop – lightweight, long battery life, not too expensive. Which laptop?',
+    context: 'Laptop A: Low cost, Light, Short battery\nLaptop B: High cost, Average, Long battery\nLaptop C: Average cost, Light, Long battery\nLaptop D: High cost, Heavy, Short battery',
+    options: ['Laptop A – Low cost, Light, Short battery', 'Laptop B – High cost, Average, Long battery', 'Laptop C – Average cost, Light, Long battery', 'Laptop D – High cost, Heavy, Short battery'],
+    answer: 2
+  }
+];
+
+const round2 = [
+  // Christina
+  {
+    id: 'r2c1', type: 'mcq',
+    q: '[Christina] Customer says: "Needing a membership to get benefits is unfair. Everyone should be able to purchase and use your products without having to pay for the privilege."',
+    options: [
+      '"Please calm down. Once you do so, I\'m happy to go through our membership info with you."',
+      '"Sounds like you\'re frustrated. A membership is not required to purchase or use our products."',
+      '"You have to consider all of the benefits that come with having a membership."',
+      '"There are many places to shop. You can decide what is best for you."'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2c2', type: 'mcq',
+    q: '[Christina] Customer says their co-worker uses Premium and loves it but it\'s too expensive at $720/year. What is your best approach?',
+    options: [
+      'Insist the Premium membership is worth $720/year and push for sign-up.',
+      'Acknowledge the cost concern, explain the benefits, and let the customer decide based on their habits.',
+      'Offer a discount on the membership to close the sale.',
+      'Tell the customer that the Premium membership is the only way to get good deals.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2c3', type: 'mcq',
+    q: '[Christina] Customer wants to use a FRIEND\'s membership to get the member discount on a specific item. How do you respond?',
+    options: [
+      '"Unfortunately, membership discounts can\'t be extended to non-members."',
+      '"You could ask your friend to get this item for you. Would that work?"',
+      '"If you got the membership now — you would immediately get the membership discount."',
+      '"I\'m happy to research alternatives similar to the price range of the membership discount."'
+    ],
+    answer: 0
+  },
+  // Celeste
+  {
+    id: 'r2ce1', type: 'mcq',
+    q: '[Celeste] Customer wants help downloading the app and asks about scanning a QR code. What is your first response?',
+    options: [
+      '"Sure, I\'ll email you the download link instead."',
+      '"Happy to help! Do you think it could be the QR code on the website?"',
+      '"You don\'t need the QR code, just search for our app in the App Store."',
+      '"Let me transfer you to our tech support team."'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2ce2', type: 'mcq',
+    q: '[Celeste] Customer found the QR code on the web page and wants to scan it. What is the correct guidance?',
+    options: [
+      'Tell them to screenshot the QR code and email it to themselves.',
+      'Open the camera app, point it at the QR code, and tap the link that appears.',
+      'Download a separate QR scanner app first.',
+      'Type the URL shown under the QR code manually.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2ce3', type: 'mcq',
+    q: '[Celeste] Customer asks what the mobile app can do before going through setup steps. What do you tell them?',
+    options: [
+      'Tell them they\'ll find out after downloading it.',
+      'The app lets customers search products, track orders, and get notified of sales.',
+      'The app is mainly for viewing past orders.',
+      'The app is only available for Premium members.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2ce4', type: 'mcq',
+    q: '[Celeste] Customer decides to download the app. Rank responses from MOST to LEAST effective — which is MOST effective?',
+    options: [
+      '"Sounds good, I am ready when you are."',
+      '"Step 1: Open your camera."',
+      '"Are you sure? It would be a lot of effort."',
+      '"Since this may take a while, would you mind calling back?"'
+    ],
+    answer: 0
+  },
+  // Alex
+  {
+    id: 'r2a1', type: 'mcq',
+    q: '[Alex] Customer says they experienced an issue last week — got charged the wrong price for an e-reader. What is the customer\'s issue?',
+    options: [
+      'Wrong item delivered',
+      'Charged the incorrect price',
+      'Item not delivered',
+      'Membership discount not applied'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2a2', type: 'mcq',
+    q: '[Alex] The agent fixed the error, but the customer is still upset about being charged $1 more and feels they have to always review checkout. Best response?',
+    options: [
+      'Defend the system and say errors are rare.',
+      'Apologize for the inconvenience, acknowledge it was a system issue, and assure it will be investigated.',
+      'Offer a $1 coupon and move on.',
+      'Tell the customer to always double-check their order before submitting.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2a3', type: 'mcq',
+    q: '[Alex] Customer says their last delivery was late (expected 8am, arrived 8:30am) AND vitamin subscription was late — feels not valued. Best response?',
+    options: [
+      'Apologize and explain there were backend server issues; offer a discount on next purchases.',
+      'Explain that 30-minute delays are within normal range.',
+      'Suggest they upgrade their membership for priority delivery.',
+      'Tell the customer delays happen and there\'s nothing that can be done.'
+    ],
+    answer: 0
+  },
+  {
+    id: 'r2a4', type: 'mcq',
+    q: '[Alex] What would you do AFTER this interaction with the customer? Which action is MOST effective?',
+    options: [
+      'Tell your manager about the issues the customer experienced before the end of your shift. (Best)',
+      'Bring up the customer\'s poor experience during the next team meeting.',
+      'Share with other associates that the customer always complains.',
+      'No need to do anything — this customer just complains a lot. (Worst)'
+    ],
+    answer: 0
+  },
+  // Mina
+  {
+    id: 'r2m1', type: 'mcq',
+    q: '[Mina] Customer is calling. What is the customer doing?',
+    options: [
+      'Placing a new order',
+      'Giving feedback on the app',
+      'Requesting a refund',
+      'Asking about membership'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2m2', type: 'mcq',
+    q: '[Mina] Customer says the website takes forever to find things and thinks shopping in-store would be easier. Best response?',
+    options: [
+      'Tell them in-store shopping is available at select locations.',
+      'Apologize, acknowledge the frustration, assure them improvements are being made, and invite specific feedback.',
+      'Suggest they use the search bar to find items faster.',
+      'Tell them the website is easy to use once they get used to it.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2m3', type: 'mcq',
+    q: '[Mina] Customer compliments the support associates — says they\'ve always been friendly. Best response?',
+    options: [
+      'Accept the compliment and say nothing more.',
+      'Thank them and tell them you\'ll pass the compliments to the team.',
+      'Ask them to leave a review online.',
+      'Tell them the team is just doing their job.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2m4', type: 'mcq',
+    q: '[Mina] What would you do with the feedback provided by the customer?',
+    options: [
+      'Review previous customer calls to see if they contained feedback on the mobile app.',
+      'Check with my supervisor on how to pass along feedback.',
+      'Make a note of the feedback on the customer\'s account.',
+      'Talk with co-workers to see if they\'ve heard the same feedback.'
+    ],
+    answer: 2
+  },
+  // Francisco
+  {
+    id: 'r2f1', type: 'mcq',
+    q: '[Francisco] Customer is trying to scan the QR code to download software — it\'s not working. They were told by another employee to take a picture. Best response?',
+    options: [
+      '"Taking a picture is the correct method. Let me help you with that."',
+      '"I\'m sorry about that. Let\'s see if we can figure out what\'s going on together."',
+      '"The QR code feature is currently down. Try again later."',
+      '"Please go to our website directly to download."'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2f2', type: 'mcq',
+    q: '[Francisco] Customer says they have no time and have never had technology issues before. Best response?',
+    options: [
+      'Tell them to try again when they have more time.',
+      'Acknowledge frustration, affirm their capability, and give efficient guidance on camera positioning.',
+      'Immediately escalate to a senior tech associate.',
+      'Apologize repeatedly and wait for the customer to lead the troubleshooting.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2f3', type: 'mcq',
+    q: '[Francisco] Customer says they don\'t appreciate being told incorrect information — they\'re behind because of it. Best response?',
+    options: [
+      'Blame the previous associate for the misinformation.',
+      'Apologize, validate their time concerns, and commit to resolving the issue promptly.',
+      'Tell them all associates give their best guidance and mistakes happen.',
+      'Offer a discount to compensate for the inconvenience.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2f4', type: 'mcq',
+    q: '[Francisco] What would you do with the feedback provided by the customer?',
+    options: [
+      'Note feedback on the customer\'s account.',
+      'Tell other associates to be more careful.',
+      'Check with my supervisor on how to pass along feedback.',
+      'No action needed since the issue was resolved.'
+    ],
+    answer: 2
+  },
+  // Gary
+  {
+    id: 'r2g1', type: 'mcq',
+    q: '[Gary] Customer saw commercials, doesn\'t shop online a lot, but is interested in saving money. Which benefits are MOST helpful? (Best answer)',
+    context: 'Base: Free shipping | Base Plus: +Discounts | Premium: +Same-day, streaming, private label',
+    options: [
+      'Same-day delivery for all purchases only',
+      'Free shipping, Member discounts, Unlimited streaming of movies and TV',
+      'Automated monthly deliveries',
+      'Unlimited data storage'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2g2', type: 'mcq',
+    q: '[Gary] Customer asks to explain the difference between Base and Base Plus membership. What is accurate?',
+    options: [
+      'They are the same but Base Plus includes same-day delivery.',
+      'Base ($10/mo) includes free shipping + same-day on select items. Base Plus ($30/mo) adds discounts on ALL products.',
+      'Base Plus is just a cheaper version of Premium.',
+      'Base includes discounts; Base Plus includes streaming.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2g3', type: 'mcq',
+    q: '[Gary] Customer thinks Base Plus is $10/month. How do you correct this?',
+    options: [
+      'Agree with the customer to avoid conflict.',
+      'Clarify that Base Plus is $30/month, not $10, and re-explain the benefits.',
+      'Tell them they misheard and move on.',
+      'Offer them the Base membership instead without clarifying.'
+    ],
+    answer: 1
+  },
+  {
+    id: 'r2g4', type: 'mcq',
+    q: '[Gary] If the customer was still unsure about getting a membership, how would you respond?',
+    options: [
+      '"I can\'t help you further if you don\'t sign up."',
+      '"The membership is optional so no pressure either way."',
+      '"How about you sign-up now? You can cancel if you change your mind."',
+      '"Let me have my manager call you with more information."'
+    ],
+    answer: 2
+  }
+];
+
+const round3 = [
+  { id:'p1', a:'I look for work where I can build new skills.', b:'I\'ll learn new things when I know I\'ll apply them right away.', answer:1 },
+  { id:'p2', a:'I\'m always looking for new ways to do things.', b:'Constant change is exhausting.', answer:0 },
+  { id:'p3', a:'I\'m the first to notice an error.', b:'I\'ll occasionally make easy-to-fix mistakes.', answer:0 },
+  { id:'p4', a:'Usually I don\'t dwell on the past.', b:'I think about past failures as much as most people.', answer:0 },
+  { id:'p5', a:'I take initiative more than most people, but less than some.', b:'It\'s best to wait for more instruction if you complete tasks early.', answer:1 },
+  { id:'p6', a:'I take a personal interest in others\' feelings.', b:'I prefer to focus on the task at hand rather than how others feel about it.', answer:1 },
+  { id:'p7', a:'I handle pressure as well as most people.', b:'People should show they\'re excited.', answer:0 },
+  { id:'p8', a:'I persist until a task is done.', b:'I\'m about as reliable as everyone else on my team.', answer:0 },
+  { id:'p9', a:'I\'m energized by change.', b:'I usually take time to find out how others are feeling.', answer:0 },
+  { id:'p10', a:'Other people say I remain calm under tense situations.', b:'I seek out work that needs to be done.', answer:0 },
+  { id:'p11', a:'I like applying my existing knowledge to new areas.', b:'I notice errors that others often miss.', answer:0 },
+  { id:'p12', a:'I recover from setbacks about as quickly as others.', b:'I adjust quickly to new settings.', answer:1 },
+  { id:'p13', a:'If I notice something needs to be done, I point it out.', b:'People tell me I\'m dependable.', answer:0 },
+  { id:'p14', a:'I can sense when others are upset.', b:'I am often excited to learn something new.', answer:1 },
+  { id:'p15', a:'I like surprises.', b:'I don\'t dwell on my mistakes.', answer:0 },
+  { id:'p16', a:'I am proactive.', b:'Even when I\'m frustrated, I respond calmly.', answer:1 },
+  { id:'p17', a:'It frustrates me when things aren\'t perfect.', b:'I try to understand other people\'s feelings and emotions.', answer:1 },
+  { id:'p18', a:'Learning new perspectives helps me generate new ideas.', b:'I adapt to change quickly.', answer:0 },
+  { id:'p19', a:'I\'m known for staying calm under pressure.', b:'I sometimes accept guidance from others.', answer:0 },
+  { id:'p20', a:'I can usually recover from a setback.', b:'I rarely miss deadlines.', answer:0 },
+  { id:'p21', a:'I notice details that most other people miss.', b:'My learning interests are varied.', answer:0 },
+  { id:'p22', a:'I take initiative when asked to.', b:'I care deeply about the feelings of others.', answer:1 },
+  { id:'p23', a:'I put failures behind me quickly.', b:'I\'m known for getting work done.', answer:1 },
+  { id:'p24', a:'People tell me I have a keen eye for detail.', b:'I appear calm even when the world around me is rushed.', answer:1 },
+  { id:'p25', a:'It\'s usually best to wait for instruction if a task is unclear.', b:'I\'m often the first to try new things.', answer:1 },
+  { id:'p26', a:'I enjoy getting tasks off of my to-do list.', b:'I focus more on future possibilities than past problems.', answer:1 },
+  { id:'p27', a:'I usually double-check my work.', b:'I can respond calmly when others are upset.', answer:1 },
+  { id:'p28', a:'I often choose predictability over the unknown.', b:'I\'m as much of a self-starter as anyone else.', answer:1 },
+  { id:'p29', a:'I don\'t think much about other people\'s feelings.', b:'I sometimes have a hard time putting failure behind me.', answer:0 },
+  { id:'p30', a:'I can always be trusted to fulfill my obligations.', b:'I am a life-long learner.', answer:1 },
+  { id:'p31', a:'I am rarely bothered.', b:'When my work is complete, I look for more work.', answer:1 },
+  { id:'p32', a:'Consistency helps me thrive at work.', b:'I take time to better understand my coworkers.', answer:0 },
+  { id:'p33', a:'Learning new things gives me more opportunities.', b:'I spot errors that others overlook.', answer:0 },
+  { id:'p34', a:'Meeting commitments is a top priority.', b:'I\'m always able to remain calm.', answer:0 },
+  { id:'p35', a:'It\'s easy to bounce back from failure.', b:'I cheer up my coworkers when they feel down.', answer:0 },
+  { id:'p36', a:'I like variety in my work.', b:'Double-checking my work is built into my process.', answer:0 },
+  { id:'p37', a:'I do my best, even on trivial tasks.', b:'I take pride in staying calm in unclear situations.', answer:1 },
+  { id:'p38', a:'I move on more quickly from difficulties than others.', b:'I take action when I notice it\'s needed.', answer:0 },
+  { id:'p39', a:'People should take more time reviewing their work.', b:'I like applying my current skills to new challenges.', answer:1 },
+  { id:'p40', a:'Routines bring me a sense of calm.', b:'I make an effort to ask people how they are doing.', answer:0 },
+  { id:'p41', a:'Setbacks are hard to manage.', b:'I need to be reminded of deadlines.', answer:0 },
+  { id:'p42', a:'My interest in learning new things depends on how busy I am.', b:'I hesitate to act if not told what to do.', answer:0 },
+  { id:'p43', a:'Rechecking your work is usually a waste of time.', b:'At times it\'s hard to keep my composure.', answer:0 },
+  { id:'p44', a:'Sometimes I work hard, and sometimes I hardly work.', b:'How other people feel isn\'t my business.', answer:1 },
+  { id:'p45', a:'I like learning about new topics if I have time.', b:'I like trying new methods for daily tasks.', answer:0 },
+  { id:'p46', a:'I sometimes notice if things are missing.', b:'I\'m usually not easily overwhelmed.', answer:0 },
+  { id:'p47', a:'I want most of my coworkers to see me as dependable.', b:'It\'s important to understand people\'s emotions in order to help.', answer:1 },
+  { id:'p48', a:'I\'m confident that I can handle any challenge.', b:'I like to learn new things when I have extra time.', answer:1 }
+];
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let currentRound = 0;
+let questions = [];
+let qIndex = 0;
+let correct = 0;
+let wrong = 0;
+let history = [];
+let answered = false;
+let roundName = '';
+
+function getRoundQuestions(r) {
+  if (r === 0) return [...round1, ...round1ex].map(q => ({...q, roundLabel: 'Round 1 – Customer Service'}));
+  if (r === 1) return round2.map(q => ({...q, roundLabel: 'Round 2 – Conversations'}));
+  if (r === 2) return round3.map(q => ({...q, type:'personality', roundLabel: 'Round 3 – Personality'}));
+  return [
+    ...round1.map(q=>({...q, roundLabel:'Round 1'})),
+    ...round1ex.map(q=>({...q, roundLabel:'Round 1 Ex'})),
+    ...round2.map(q=>({...q, roundLabel:'Round 2'})),
+    ...round3.map(q=>({...q, type:'personality', roundLabel:'Round 3'}))
+  ];
+}
+
+const roundNames = ['Round 1 – Customer Service', 'Round 2 – Conversations', 'Round 3 – Personality', 'Full Practice Test'];
+
+function startRound(r) {
+  currentRound = r;
+  questions = getRoundQuestions(r);
+  qIndex = 0; correct = 0; wrong = 0; history = []; answered = false;
+  roundName = roundNames[r];
+
+  document.getElementById('hero').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('quiz-screen').style.display = 'block';
+  document.getElementById('round-name').textContent = roundName;
+  renderQuestion();
+}
+
+function renderQuestion() {
+  answered = false;
+  const q = questions[qIndex];
+  const total = questions.length;
+  document.getElementById('progress-text').textContent = `Question ${qIndex+1} of ${total}`;
+  document.getElementById('progress-bar').style.width = `${((qIndex)/total)*100}%`;
+  updateLiveScore();
+
+  const container = document.getElementById('question-container');
+  const nextBtn = document.getElementById('next-btn');
+  nextBtn.style.display = 'none';
+  nextBtn.textContent = qIndex < questions.length-1 ? 'Next Question →' : 'See Results 🏆';
+
+  if (q.type === 'personality') {
+    container.innerHTML = `
+      <div class="question-card">
+        <div class="q-number">Question ${qIndex+1} · Personality & Work Style</div>
+        <div class="q-text">Choose the statement that is <strong>most like</strong> the ideal Amazon VCS candidate:</div>
+        <div class="personality-pair">
+          <button class="pair-btn" id="opt-0" onclick="answerPersonality(0)">${q.a}</button>
+          <button class="pair-btn" id="opt-1" onclick="answerPersonality(1)">${q.b}</button>
+        </div>
+        <div class="feedback-box" id="feedback"></div>
+      </div>`;
+  } else {
+    let contextHtml = q.context ? `<div class="q-context">${q.context}</div>` : '';
+    let optsHtml = q.options.map((o,i) => `<button class="option-btn" id="opt-${i}" onclick="answerMCQ(${i})">${o}</button>`).join('');
+    container.innerHTML = `
+      <div class="question-card">
+        <div class="q-number">Question ${qIndex+1}${q.roundLabel ? ' · '+q.roundLabel : ''}</div>
+        <div class="q-text">${q.q}</div>
+        ${contextHtml}
+        <div class="options-list">${optsHtml}</div>
+        <div class="feedback-box" id="feedback"></div>
+      </div>`;
+  }
+}
+
+function answerMCQ(i) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qIndex];
+  const isCorrect = i === q.answer;
+  if (isCorrect) correct++; else wrong++;
+
+  for (let j=0; j<q.options.length; j++) {
+    const btn = document.getElementById('opt-'+j);
+    btn.disabled = true;
+    if (j === q.answer) btn.classList.add('selected-correct');
+    else if (j === i && !isCorrect) btn.classList.add('selected-wrong');
+  }
+
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  if (isCorrect) {
+    fb.className = 'feedback-box correct';
+    fb.textContent = '✅ Correct! Great choice.';
+  } else {
+    fb.className = 'feedback-box wrong';
+    fb.textContent = `❌ Incorrect. The correct answer is: Option ${q.answer+1}.`;
+  }
+
+  history.push({ q: q.q || 'Personality Q', chosen: q.options[i], correct: q.options[q.answer], isCorrect });
+  updateLiveScore();
+  document.getElementById('next-btn').style.display = 'block';
+}
+
+function answerPersonality(i) {
+  if (answered) return;
+  answered = true;
+  const q = questions[qIndex];
+  const isCorrect = i === q.answer;
+  if (isCorrect) correct++; else wrong++;
+
+  ['opt-0','opt-1'].forEach((id,j) => {
+    const btn = document.getElementById(id);
+    btn.disabled = true;
+    if (j === q.answer) btn.classList.add('selected-correct');
+    else if (j === i && !isCorrect) btn.classList.add('selected-wrong');
+  });
+
+  const fb = document.getElementById('feedback');
+  fb.style.display = 'block';
+  if (isCorrect) {
+    fb.className = 'feedback-box correct';
+    fb.textContent = '✅ Correct! That reflects the ideal candidate profile.';
+  } else {
+    fb.className = 'feedback-box wrong';
+    fb.textContent = `❌ The recommended answer is: "${i===0 ? q.b : q.a}"`;
+  }
+
+  history.push({ q: `${q.a}  OR  ${q.b}`, chosen: i===0?q.a:q.b, correct: q.answer===0?q.a:q.b, isCorrect });
+  updateLiveScore();
+  document.getElementById('next-btn').style.display = 'block';
+}
+
+function updateLiveScore() {
+  const total = correct + wrong;
+  document.getElementById('live-correct').textContent = correct;
+  document.getElementById('live-wrong').textContent = wrong;
+  document.getElementById('live-score').textContent = total > 0 ? Math.round((correct/total)*100)+'%' : '0%';
+}
+
+function nextQuestion() {
+  qIndex++;
+  if (qIndex >= questions.length) {
+    showResults();
+  } else {
+    renderQuestion();
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+}
+
+function showResults() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'block';
+  window.scrollTo({top:0, behavior:'smooth'});
+
+  const total = questions.length;
+  const pct = Math.round((correct/total)*100);
+
+  document.getElementById('rs-correct').textContent = correct;
+  document.getElementById('rs-wrong').textContent = wrong;
+  document.getElementById('rs-total').textContent = total;
+  document.getElementById('score-pct').textContent = pct+'%';
+  document.getElementById('score-circle').style.setProperty('--pct', pct+'%');
+  document.getElementById('progress-bar').style.width = '100%';
+
+  let trophy, title, sub, grade, color;
+  if (pct >= 90) { trophy='🏆'; title='Outstanding!'; sub='You\'re ready for the real assessment.'; grade='A+'; color='#06d6a0'; }
+  else if (pct >= 75) { trophy='🥇'; title='Great Work!'; sub='A bit more practice and you\'ll ace it.'; grade='B+'; color='#ffd166'; }
+  else if (pct >= 60) { trophy='📚'; title='Keep Practicing!'; sub='Review the answers and try again.'; grade='C'; color='#ff9900'; }
+  else { trophy='💪'; title='Don\'t Give Up!'; sub='Review all questions and practice more.'; grade='D'; color='#ef476f'; }
+
+  document.getElementById('result-trophy').textContent = trophy;
+  document.getElementById('result-title').textContent = title;
+  document.getElementById('result-subtitle').textContent = sub;
+  const badge = document.getElementById('grade-badge');
+  badge.textContent = `Grade: ${grade} – ${pct}%`;
+  badge.style.background = color+'22';
+  badge.style.border = `1px solid ${color}66`;
+  badge.style.color = color;
+
+  // Build review list
+  const rl = document.getElementById('review-list');
+  rl.innerHTML = '<h3 style="font-family:Syne;font-size:1.1rem;margin-bottom:1rem;margin-top:1.5rem;">Question Review</h3>';
+  history.forEach((h,i) => {
+    const cls = h.isCorrect ? 'correct' : 'wrong';
+    rl.innerHTML += `
+      <div class="review-item ${cls}">
+        <div class="review-q"><strong>Q${i+1}:</strong> ${h.q.substring(0,120)}${h.q.length>120?'…':''}</div>
+        <div class="review-answer">
+          Your answer: ${h.isCorrect ? '<span>✅ '+h.chosen.substring(0,80)+'</span>' : '<span style="color:var(--error)">❌ '+h.chosen.substring(0,80)+'</span>'}<br>
+          ${!h.isCorrect ? `Correct: <span>${h.correct.substring(0,100)}</span>` : ''}
+        </div>
+      </div>`;
+  });
+}
+
+function toggleReview() {
+  const rl = document.getElementById('review-list');
+  rl.style.display = rl.style.display === 'block' ? 'none' : 'block';
+}
+
+function retryRound() { startRound(currentRound); }
+function goHome() {
+  document.getElementById('quiz-screen').style.display = 'none';
+  document.getElementById('results-screen').style.display = 'none';
+  document.getElementById('hero').style.display = 'flex';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+</script>
+</body>
+</html>
